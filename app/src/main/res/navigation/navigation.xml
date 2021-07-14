@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation"
+    app:startDestination="@id/overzichtFragment">
+    <fragment
+        android:id="@+id/overzichtFragment"
+        android:name="com.example.travelapp.ui.overview.main.view.OverzichtFragment"
+        android:label="OverzichtFragment"
+        tools:layout="@layout/fragment_overzicht">
+        <action
+            android:id="@+id/action_overzichtFragment_to_optionMenuFragment"
+            app:destination="@id/optionMenuFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/optionMenuFragment"
+        android:name="com.example.travelapp.ui.options.main.view.OptionMenuFragment"
+        android:label="fragment_option_menu"
+        tools:layout="@layout/fragment_option_menu" >
+        <argument
+            android:name="country"
+            app:argType="com.example.travelapp.data.entity.country.CountryEntity"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_optionMenuFragment_to_citiesPopupFragment"
+            app:destination="@id/citiesPopupFragment" />
+        <action
+            android:id="@+id/action_optionMenuFragment_to_covidHistoryTodayFragment"
+            app:destination="@id/covidHistoryTodayFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/citiesPopupFragment"
+        android:name="com.example.travelapp.ui.cities.main.view.CitiesPopupFragment"
+        android:label="fragment_cities_popup"
+        tools:layout="@layout/fragment_cities_popup"
+        app:popUpTo="@+id/optionMenuFragment">
+        <argument
+            android:name="country"
+            app:argType="com.example.travelapp.data.entity.country.CountryEntity" />
+        <action
+            android:id="@+id/action_citiesPopupFragment_to_weatherFragment"
+            app:destination="@id/weatherFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/weatherFragment"
+        android:name="com.example.travelapp.ui.weather.main.view.WeatherFragment"
+        android:label="fragment_weather"
+        tools:layout="@layout/fragment_weather" >
+        <argument
+            android:name="city"
+            app:argType="com.example.travelapp.data.entity.city.CityEntity" />
+        <argument
+            android:name="country"
+            app:argType="com.example.travelapp.data.entity.country.CountryEntity" />
+    </fragment>
+    <fragment
+        android:id="@+id/covidHistoryTodayFragment"
+        android:name="com.example.travelapp.ui.covid.main.view.CovidHistoryTodayFragment"
+        android:label="fragment_covid_history_today"
+        tools:layout="@layout/fragment_covid_history_today" >
+        <argument
+            android:name="country"
+            app:argType="com.example.travelapp.data.entity.country.CountryEntity" />
+    </fragment>
+</navigation>
