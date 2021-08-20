@@ -2,39 +2,39 @@ package com.example.travelapp.ui.covid.main.view
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.util.Log
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import com.example.travelapp.MainActivity
-import com.example.travelapp.data.api.ApiHelper
-import com.example.travelapp.data.api.RetrofitBuilder
-import com.example.travelapp.data.model.Timeline
+import com.example.travelapp.R
+import com.example.travelapp.data.entity.covid.CovidInfoEntity
+import com.example.travelapp.data.entity.covidHistorical.CovidHistoricalDeathsCases
 import com.example.travelapp.databinding.FragmentCovidHistoryTodayBinding
-import com.example.travelapp.ui.covid.base.CovidViewModelFactory
 import com.example.travelapp.ui.covid.main.viewmodel.CovidViewModel
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.LargeValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.google.gson.Gson
+import org.koin.android.ext.android.inject
 import java.text.SimpleDateFormat
 import java.util.*
 
 
 class CovidHistoryTodayFragment : Fragment() {
 
+    private val format = SimpleDateFormat("dd/MM")
+
     private lateinit var binding: FragmentCovidHistoryTodayBinding
 
-    companion object {
-        var last5 : Long = 5L
-    }
+    private val valueFormatter = XAxisValueFormatter()
 
-    private lateinit var viewModel : CovidViewModel
+    private val viewModel : CovidViewModel by inject()
 
     private lateinit var arguments : CovidHistoryTodayFragmentArgs
+
 
 
     override fun onCreateView(
@@ -42,157 +42,166 @@ class CovidHistoryTodayFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         getNavArguments()
+        setHasOptionsMenu(true)
+        (activity as MainActivity?)?.setActionBarTitle("Covid, ${arguments.country.name}")
         configBinding(inflater)
-        configViewModel()
-        getData(arguments.country!!.alpha2Code.lowercase())
-        setActionBar()
+
+        getLocalData()
+        observingData()
+
 
         binding
         return binding.root
     }
 
-    private fun getData(country : String) {
-        viewModel.getData(country)
-
-        viewModel.covidInfo.observe(this.viewLifecycleOwner, Observer { response ->
-            response?.let {
-                binding.totalNumberOfCases.text = response.cases.toString()
-                binding.newCases.text = response.todayCases.toString()
-                binding.totalNumberOfDeaths.text = response.deaths.toString()
-                binding.newDeaths.text = response.todayDeaths.toString()
-                binding.criticalCases.text = response.critical.toString()
-            }
-        })
-
-        viewModel.historicalData.observe(this.viewLifecycleOwner, Observer { response ->
-            response?.let {
-                createHistoricalCasesGraph(response.timeline)
-                createHistoricalDeathsGraph(response.timeline)
-            }
-        })
+    private fun getLocalData(){
+        viewModel.setCountry(arguments.country)
     }
 
-    private fun createHistoricalDeathsGraph(timeline: Timeline) {
+    private fun observingData(){
 
-        var json : String = timeline.deaths.toString().replace('{', ' ').replace('}',' ').replace('=',':')
 
-        var listDeaths = listOf<Float>()
 
-        var gson : Gson = Gson()
-        json = gson.toJson(json)
-        var test = json.split(",")
+        viewModel.localCovidInfo.observe(this.viewLifecycleOwner, Observer{
+            if(it == null){
+                setActionBar(null)
+                viewModel.getRemoteCovidInfo(arguments.country)
+            }else{
+                Log.i("date", it.update.toString())
+                setActionBar(it)
+                setupDetails(
+                    it.casesAmount.toString(),
+                    it.todayCasesAmount.toString(),
+                    it.deathsAmount.toString(),
+                    it.todayDeathsAmount.toString(),
+                    it.critical.toString())
+            }
+        })
 
-        for (variable in test){
-            var new = variable.trim().split(":").get(1).trim().replace('"', ' ').trim()
-            listDeaths = listDeaths.plus(new.toFloat())
+        viewModel.localHistoricalInfo.observe(this.viewLifecycleOwner, Observer {
+            if(it == null){
+                viewModel.getRemoteHistoricalInfo(arguments.country)
+            }else{
+                viewModel.setHistorical(it)
+            }
+        })
+
+        viewModel.localCasesAndDeaths.observe(this.viewLifecycleOwner, Observer{
+            if(it !== null){
+                if(it.deaths.size !== 0){
+                    setGraph(it)
+                }
+            }
+        })
+
+
+    }
+
+    private fun setGraph(it: CovidHistoricalDeathsCases) {
+
+
+
+        var deaths = it.deaths.mapIndexed { index, death ->
+            Entry(index.toFloat(), death.number)
         }
 
 
-        var currentDate = Calendar.getInstance()
-        currentDate.add(Calendar.DAY_OF_WEEK, -1)
-
-
-        var monthAgo  = Calendar.getInstance()
-        monthAgo.time = currentDate.time
-        monthAgo.add(Calendar.MONTH, -1)
-        monthAgo.add(Calendar.DAY_OF_WEEK, 1)
-
-
-
-
-
-        var listDate = listOf<Float>()
-        while(monthAgo.before(currentDate)){
-            listDate = listDate.plus(monthAgo.timeInMillis.toFloat())
-
-            last5 = monthAgo.timeInMillis.toString().substring(monthAgo.timeInMillis.toString().length-5).toString().toLong()
-            monthAgo.add(Calendar.DAY_OF_WEEK, 1)
-
+        var cases = it.cases.mapIndexed{ index, case  ->
+            Entry(index.toFloat(), case.number)
         }
 
-        listDate = listDate.plus(currentDate.timeInMillis.toFloat())
+        var deathsLds = LineDataSet(deaths, "Doden COVID-19")
 
-        var entries = listOf<Entry>()
+        deathsLds.color = Color.RED
 
-        for (i in 0..listDate.size-1){
-            entries = entries.plus(Entry(listDate[i], listDeaths[i]))
-        }
+        var casesLds = LineDataSet(cases, "Besmettingen COVID-19")
+        casesLds.color = Color.BLUE
 
-        var lds = LineDataSet(entries, "Deaths")
-        lds.color = Color.RED
-        var ld = LineData(lds)
+        var largeValueFormatter = LargeValueFormatter()
+        largeValueFormatter.setMaxLength(8)
 
-        binding.dodenAantal.xAxis.valueFormatter = XAxisValueFormatter()
-        binding.dodenAantal.data = ld
+        var lineDataDeaths = LineData(deathsLds)
+        lineDataDeaths.setValueFormatter(largeValueFormatter)
+        lineDataDeaths.setValueTextSize(11f)
+
+        var lineDataCases = LineData(casesLds)
+        lineDataCases.setValueFormatter(largeValueFormatter)
+        lineDataCases.setValueTextSize(11f)
+
+        val valueFormatter = setDaysValueFormatter(it.deaths.map { it.date })
+
+        //graph deaths
+
+
+        binding.dodenAantal.axisRight.isEnabled = false
+        binding.dodenAantal.axisLeft.valueFormatter = largeValueFormatter
+        binding.dodenAantal.xAxis.valueFormatter = valueFormatter
+        binding.dodenAantal.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        binding.dodenAantal.data = lineDataDeaths
+        binding.dodenAantal.fitScreen()
+        binding.dodenAantal.zoom(5f,0f,5f,0f)
+
         binding.dodenAantal.data.notifyDataChanged()
         binding.dodenAantal.invalidate()
-    }
-
-    private fun createHistoricalCasesGraph(timeline: Timeline) {
-
-        var json : String = timeline.cases.toString().replace('{', ' ').replace('}',' ').replace('=',':')
-
-        var listCases = listOf<Float>()
-
-        var gson : Gson = Gson()
-        json = gson.toJson(json)
-        var test = json.split(",")
-
-        for (variable in test){
-            var new = variable.trim().split(":").get(1).trim().replace('"', ' ').trim()
-            listCases = listCases.plus(new.toFloat())
-        }
-
-        var currentDate = Calendar.getInstance()
-        currentDate.add(Calendar.DAY_OF_WEEK, -1)
-
-
-        var monthAgo  = Calendar.getInstance()
-        monthAgo.time = currentDate.time
-        monthAgo.add(Calendar.MONTH, -1)
-        monthAgo.add(Calendar.DAY_OF_WEEK, 1)
 
 
 
+        //graph cases
+        binding.casesAantalGraph.axisRight.isEnabled = false
+        binding.casesAantalGraph.axisLeft.valueFormatter = largeValueFormatter
+        binding.casesAantalGraph.xAxis.valueFormatter = valueFormatter
+        binding.casesAantalGraph.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        binding.casesAantalGraph.data = lineDataCases
 
 
-        var listDate = listOf<Float>()
-        while(monthAgo.before(currentDate)){
-            listDate = listDate.plus(monthAgo.timeInMillis.toFloat())
+        binding.casesAantalGraph.fitScreen()
+        binding.casesAantalGraph.zoom(5f,0f,5f,0f)
 
-            last5 = monthAgo.timeInMillis.toString().substring(monthAgo.timeInMillis.toString().length-5).toString().toLong()
-            monthAgo.add(Calendar.DAY_OF_WEEK, 1)
-
-        }
-
-        listDate = listDate.plus(currentDate.timeInMillis.toFloat())
-
-        var entries = listOf<Entry>()
-
-        for (i in 0..listDate.size-1){
-            entries = entries.plus(Entry(listDate[i], listCases[i]))
-        }
-
-        var lds = LineDataSet(entries, "Cases")
-        lds.color = Color. BLUE
-        var ld = LineData(lds)
-
-        binding.besmetAantal.xAxis.valueFormatter = XAxisValueFormatter()
-        binding.besmetAantal.data = ld
-        binding.besmetAantal.data.notifyDataChanged()
-        binding.besmetAantal.invalidate()
+        binding.casesAantalGraph.data.notifyDataChanged()
+        binding.casesAantalGraph.invalidate()
 
     }
 
-    private fun setActionBar() {
-        val country = arguments.country!!
-        val name = if(country.countryNameNl.isNotBlank()) country.countryNameNl else country.name
-        (activity as MainActivity?)?.setActionBarTitle("Covid in $name")
+
+    private fun setupDetails(cases:String, casesToday : String, deaths:String, deathsToday : String, critical : String) {
+        binding.totalNumberOfCases.text = "Totaal aantal besmettingen: ${cases}"
+        binding.newCases.text = "Besmettingen vandaag: ${casesToday}"
+        binding.totalNumberOfDeaths.text = "Totaal aantal doden: ${deaths}"
+        binding.newDeaths.text = "Doden vandaag: ${deathsToday}"
+        binding.criticalCases.text = "Totaal aantal op intesieve zorgen: ${critical}"
     }
 
-    private fun configViewModel() {
-        val modelFactory = CovidViewModelFactory(ApiHelper(RetrofitBuilder.apiServiceCovid))
-        viewModel = ViewModelProvider(this, modelFactory).get(CovidViewModel::class.java)
+    private fun setDaysValueFormatter(cities: List<String>) : XAxisValueFormatter{
+        Collections.reverse(cities)
+        valueFormatter.setDays(cities)
+        return valueFormatter
+    }
+
+
+
+    private fun setActionBar(covidInfo : CovidInfoEntity?) {
+
+        val format = SimpleDateFormat("HH:mm")
+        var text : String
+        if(covidInfo == null) {
+            text = "Covid, ${arguments.country.name}"
+        } else {
+
+            var sb : StringBuilder = java.lang.StringBuilder(format.format(covidInfo.updated))
+            Log.i("strinbuilder", sb.toString())
+            var int = format.format(covidInfo.updated).substring(0,2).toInt()+2
+            Log.i("aftersubstring", int.toString())
+            sb.delete(0,2)
+            if(int < 10){
+                sb.insert(0, "0${int}")
+            }else{
+                sb.insert(0,int.toString())
+            }
+
+            text = "Covid, ${arguments.country.name} : $sb"
+        }
+
+        (activity as MainActivity?)?.setActionBarTitle(text)
     }
 
     private fun configBinding(inflater: LayoutInflater) {
@@ -200,27 +209,43 @@ class CovidHistoryTodayFragment : Fragment() {
         binding.lifecycleOwner = this
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.weather_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == R.id.refresh){
+            viewModel.refresh()
+            //removeByCity()
+
+            /*var cvExists : CardView? = binding.forecastConstraint.findViewById(detailsBinding.cardDetails.id)
+            if(cvExists !== null){
+                binding.forecastConstraint.removeView(cvExists)
+            }
+
+            lineChartBinding.theCard.visibility = View.INVISIBLE*/
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
     private fun getNavArguments() {
         arguments = CovidHistoryTodayFragmentArgs.fromBundle(requireArguments())
+    }
 
+    class XAxisValueFormatter : ValueFormatter() {
+
+        private lateinit var days : List<String>
+
+        override fun getFormattedValue(value: Float): String {
+            return days[value.toInt()]
+        }
+
+        fun setDays(days : List<String>){
+            this.days = days
+        }
     }
 }
 
-class XAxisValueFormatter : ValueFormatter() {
 
-    private var mFormat: SimpleDateFormat = SimpleDateFormat("dd/MM")
-
-    override fun getFormattedValue(value: Float): String {
-
-
-
-        var test2 = value.toLong() / 100000
-        var test3  = test2 * 100000
-        test3 += CovidHistoryTodayFragment.last5
-
-
-        var date : Date = Date(test3)
-        return mFormat.format(date)
-
-    }
-}

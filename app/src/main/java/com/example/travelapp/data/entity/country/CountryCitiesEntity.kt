@@ -7,8 +7,10 @@ import com.example.travelapp.data.entity.city.CityEntity
 data class CountryCitiesEntity(
     @Embedded val country : CountryEntity,
     @Relation(
-        parentColumn = "countryId",
-        entityColumn = "countryFk"
+        parentColumn = "country_id",
+        entityColumn = "city_country_fk",
+        entity = CityEntity::class
     )
-    val cities : List<CityEntity>
+    var cities : List<CityEntity>,
+
 )

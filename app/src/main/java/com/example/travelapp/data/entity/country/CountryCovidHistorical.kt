@@ -8,8 +8,8 @@ import com.example.travelapp.data.entity.covidHistorical.CovidHistoricalEntity
 data class CountryCovidHistorical(
     @Embedded val country : CountryEntity,
     @Relation(
-        parentColumn = "countryId",
-        entityColumn = "countryFk"
+        parentColumn = "country_id",
+        entityColumn = "historical_country_fk"
     )
     val covidHistorical : CovidHistoricalEntity
 )

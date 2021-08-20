@@ -20,8 +20,7 @@
         tools:layout="@layout/fragment_option_menu" >
         <argument
             android:name="country"
-            app:argType="com.example.travelapp.data.entity.country.CountryEntity"
-            app:nullable="true" />
+            app:argType="com.example.travelapp.data.entity.country.CountryEntity" />
         <action
             android:id="@+id/action_optionMenuFragment_to_citiesPopupFragment"
             app:destination="@id/citiesPopupFragment" />

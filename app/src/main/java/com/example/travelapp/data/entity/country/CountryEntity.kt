@@ -11,20 +11,9 @@ import kotlinx.android.parcel.Parcelize
 data class CountryEntity(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "country_id")
-    val countryId : Int,
+    val countryId : Long,
     @ColumnInfo(name = "country_name")
     val name : String,
-    @ColumnInfo(name = "country_acronym")
-    val alpha2Code : String,
-    @ColumnInfo(name = "country_capital")
-    val capital : String,
-    @ColumnInfo(name = "country_region")
-    val region : String,
-    @ColumnInfo(name = "country_population")
-    val population : Float,
-    @ColumnInfo(name = "country_flag_uri")
-    val flag : String,
-    @ColumnInfo(name = "country_name_nl")
-    val countryNameNl : String,
-
+    @ColumnInfo(name = "iso_2")
+    val iso_2 : String,
 ) : Parcelable

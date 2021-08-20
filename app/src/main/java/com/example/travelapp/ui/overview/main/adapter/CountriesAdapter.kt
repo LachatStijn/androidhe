@@ -44,7 +44,7 @@ class CountriesAdapter(private val clickListener: ClickListener): ListAdapter<Co
         }
     }
 
-    class ClickListener(val clickListener: (country:CountryEntity) -> Unit){
+    class ClickListener(val clickListener: (country: CountryEntity) -> Unit){
         fun onClick(country: CountryEntity) = clickListener(country)
     }
 

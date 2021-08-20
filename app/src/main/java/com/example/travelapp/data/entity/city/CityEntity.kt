@@ -9,11 +9,11 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 @Entity(tableName = "city")
 data class CityEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "city_id")
-    val cityId : Int,
+    val cityId : Long,
     @ColumnInfo(name = "city_name")
     val name : String,
     @ColumnInfo(name  = "city_country_fk")
-    val countryFk : Int,
+    val countryFk : Long,
 ) : Parcelable

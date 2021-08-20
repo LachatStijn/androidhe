@@ -3,21 +3,21 @@ package com.example.travelapp.ui.cities.main.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.travelapp.data.database.AppDatabase
+import androidx.lifecycle.viewModelScope
 import com.example.travelapp.data.entity.city.CityEntity
+import com.example.travelapp.data.entity.country.CountryEntity
 import com.example.travelapp.data.repository.CitiesRepository
+import kotlinx.coroutines.launch
 
-class CitiesViewModel(
-    private val citiesRepository: CitiesRepository,
-    private val database: AppDatabase) : ViewModel() {
-
-    //create LiveData
-    private val _cities = MutableLiveData<List<CityEntity>>()
-    private val _actualDataSet = MutableLiveData<List<CityEntity>>()
-    val cities : LiveData<List<CityEntity>>
-        get() = _cities
+class CitiesViewModel constructor(
+    private val citiesRepository: CitiesRepository) : ViewModel() {
 
 
+
+
+    var actualDataSet = MutableLiveData<List<CityEntity>>()
+
+    lateinit var countryCitiesEntity : LiveData<List<CityEntity>>
 
     private var _navigateToWeatherDetails = MutableLiveData<CityEntity>()
     val navigateToWeatherDetails: LiveData<CityEntity>
@@ -25,20 +25,24 @@ class CitiesViewModel(
 
 
 
-    fun getCitiesByCountry(country: Int): LiveData<List<CityEntity>> {
-        return database.cityDao().getCityByCountry(country)
+    fun getCitiesByCountry(country: CountryEntity) {
+        viewModelScope.launch {
+            countryCitiesEntity = citiesRepository.getCitiesByCountry(country.countryId)
+        }
     }
 
 
 
     fun filterData(filterValue : CharSequence?){
         if(filterValue!!.isNotBlank()){
-            var data = _actualDataSet.value?.filter { city ->
-                city.name.contains(filterValue!!)
+
+            var data = countryCitiesEntity.value?.filter { city ->
+                city.name.lowercase().contains(filterValue.toString().lowercase())
             }
-            _cities.value = data
-        }else {
-            _cities.value = _actualDataSet.value
+
+            actualDataSet.value = data!!
+        }else{
+            actualDataSet.value = countryCitiesEntity.value
         }
     }
 

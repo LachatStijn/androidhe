@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ui.weather.main.view.WeatherFragment">
 
+
+
     <LinearLayout
         android:id="@+id/forecastConstraint"
         android:orientation="vertical"

@@ -5,46 +5,39 @@
     <data>
         <variable
             name="country"
-            type="com.example.travelapp.data.entity.country.CountryEntity" />
+            type="com.example.travelapp.data.entity.country.CountryEntity"/>
 
         <variable
             name="clickListener"
-            type="com.example.travelapp.ui.overview.main.adapter.CountriesAdapter.ClickListener" />
-
-
+            type="com.example.travelapp.ui.overview.main.adapter.CountriesAdapter.ClickListener"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        >
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/countryCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="@{() -> clickListener.onClick(country)}"
+            app:cardCornerRadius="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginBottom="8dp"
-            app:cardCornerRadius="8dp"
-            android:clickable="true"
-            android:onClick="@{() -> clickListener.onClick(country)}">
+            app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                >
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@{country.name}"/>
-
-            </LinearLayout>
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@{country.name}"
+                android:gravity="center" />
 
         </androidx.cardview.widget.CardView>
 

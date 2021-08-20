@@ -1,7 +1,5 @@
 package com.example.travelapp.data.model
 import android.os.Parcelable
-import androidx.room.ColumnInfo
-import androidx.room.Entity
 import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
@@ -20,8 +18,8 @@ data class CovidPerCountryResponse (
 	@SerializedName("todayRecovered") val todayRecovered : Int,
 	@SerializedName("active") val active : Int,
 	@SerializedName("critical") val critical : Int,
-	@SerializedName("casesPerOneMillion") val casesPerOneMillion : Int,
-	@SerializedName("deathsPerOneMillion") val deathsPerOneMillion : Int,
+	@SerializedName("casesPerOneMillion") val casesPerOneMillion : Float,
+	@SerializedName("deathsPerOneMillion") val deathsPerOneMillion : Float,
 	@SerializedName("tests") val tests : Int,
 	@SerializedName("testsPerOneMillion") val testsPerOneMillion : Int,
 	@SerializedName("population") val population : Int,

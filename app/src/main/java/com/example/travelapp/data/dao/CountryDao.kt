@@ -7,16 +7,16 @@ import com.example.travelapp.data.entity.country.CountryEntity
 @Dao
 interface CountryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(countries : List<CountryEntity>)
+    suspend fun insertAll(countries : List<CountryEntity>) : List<Long>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOne(country : CountryEntity) : Long
+    @Query("SELECT * FROM country where country_name = :name")
+    fun getCountryByName(name : String) : CountryEntity
 
-    @Transaction
+    @Update
+    fun updateCountry(country : CountryEntity)
+
     @Query("SELECT * FROM country")
     fun getCountries() : LiveData<List<CountryEntity>>
 
-    @Transaction
-    @Query("SELECT * FROM country WHERE country_name = :name")
-    fun getCountryByName(name : String) : LiveData<CountryEntity>
+
 }

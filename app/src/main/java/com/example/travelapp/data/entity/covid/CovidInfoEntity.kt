@@ -1,14 +1,20 @@
 package com.example.travelapp.data.entity.covid
 
+import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import com.example.travelapp.data.Converters.DateConverter
+import kotlinx.android.parcel.Parcelize
+import java.util.*
 
 @Entity(tableName = "covid")
+@Parcelize
 data class CovidInfoEntity(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "covid_id")
-    val covidId : Int,
+    val covidId : Long,
     @ColumnInfo(name = "covid_updated")
     val updated : Float,
     @ColumnInfo(name = "covid_iso2")
@@ -30,5 +36,8 @@ data class CovidInfoEntity(
     @ColumnInfo(name = "covid_total_tests")
     val tests : Float,
     @ColumnInfo(name = "covid_country_fk")
-    val countryFk : Int
-)
+    val countryFk : Long,
+    @ColumnInfo(name="covid_info_update")
+    @TypeConverters(DateConverter::class)
+    val update : Date
+) : Parcelable
